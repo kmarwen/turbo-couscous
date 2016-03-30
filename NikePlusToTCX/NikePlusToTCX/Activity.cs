@@ -28,8 +28,26 @@ namespace NikePlusToTCX
             public string distance { get; set; }
             [JsonProperty("steps")]
             public string steps { get; set; }
+
+            private string durationField;
             [JsonProperty("duration")]
-            public string duration { get; set; }
+            public string duration
+            {
+                get { return durationField; }
+                set
+                {
+                    durationField = value;
+                    string[] durationTab = this.durationField.Split(':');
+                    TimeSpan timeDuration = new TimeSpan(Int32.Parse(durationTab[0]), Int32.Parse(durationTab[1]), Int32.Parse(durationTab[2].Split('.')[0]));
+                    TotalTimeSeconds = (int)timeDuration.TotalSeconds;
+                }
+            }
+
+            public int TotalTimeSeconds
+            {
+                get;
+                set;
+            }
         }
 
         public class Tag
@@ -52,7 +70,7 @@ namespace NikePlusToTCX
 
             [JsonProperty("startTime")]
             public DateTime startTime { get; set; }
-            
+
             [JsonProperty("activityTimeZone")]
             public string activityTimeZone { get; set; }
             [JsonProperty("status")]
@@ -108,7 +126,7 @@ namespace NikePlusToTCX
 
             public string activityName { get; set; }
         }
-        
+
         public class Paging
         {
             [JsonProperty("next")]

@@ -70,12 +70,11 @@ namespace NikePlusToTCX
 
 
 
-                // replace . with , otherwise convertion would not be possible
+                // replace . with , otherwise convertion could not be possible
                 metricsDistance.values = metricsDistance.values.Select(x => x.Replace('.', ',')).ToList();
                 metricsSpeed.values = metricsSpeed.values.Select(x => x.Replace('.', ',')).ToList();
 
                 // beta
-                /*
                 if (nikeActivity.isGpsActivity)
                 {
                     metricsDistance.newSecondValues = new List<double>();
@@ -83,26 +82,30 @@ namespace NikePlusToTCX
                     metricsSpeed.newSecondValues = new List<double>();
                     ExpandDataToSeconds(metricsSpeed);
 
+                    if (metricsDistance.newSecondValues.Count <= this.TotalTimeSeconds)
+                    {
+
+                    }
+
                     double ratio = (double)nikeActivity.activityGps.waypoints.Count / (double)metricsDistance.newSecondValues.Count;
+                    
+                    List<int> usedIndex = new List<int>();
+
                     for (int i = 0; i < metricsDistance.newSecondValues.Count; i++)
                     {
                         var wayPointIndex = i * ratio;
 
-                        bool valUsed = false;
-                        if (!valUsed)
-                        {
-                            var val = decimal.Round((decimal)wayPointIndex, MidpointRounding.AwayFromZero);
-                            valUsed = true;
-                        }
-                        while (valUsed)
-                        {
+                        int val = (int) Math.Round(wayPointIndex, MidpointRounding.AwayFromZero);
 
-                            continue;
+                        if (!usedIndex.Contains(val)) 
+                        {
+                            usedIndex.Add(val);
+                            // ici faire la boucle pour insérer les temps
                         }
+
                     }
                 }
-                */
-
+                // beta
 
 
 
@@ -180,35 +183,37 @@ namespace NikePlusToTCX
                 Track = trackPointsList;
             }
 
-            private static void ExpandDataToSeconds(NikeJson.Metric metricsMesure)
+            private void ExpandDataToSeconds(NikeJson.Metric metricsMesure)
             {
-                for (int i = 0; i < metricsMesure.values.Count - 1; i++)
+                double val_i = 0, val_i_1 = 0, delta = 0;
+
+                for (int i = 0; i < metricsMesure.values.Count-1; i++)
                 {
-                    double delta = (double.Parse(metricsMesure.values[i + 1]) - double.Parse(metricsMesure.values[i])) / 10;
-                    for (int j = 0; j < 10; j++)
+                    val_i_1 = double.Parse(metricsMesure.values[i + 1]);
+                    val_i = double.Parse(metricsMesure.values[i]);
+
+                    delta = (val_i_1 - val_i) / 10;
+                    for (int j = 1; j <= 10; j++)
                     {
-                        metricsMesure.newSecondValues.Add(double.Parse(metricsMesure.values[i]) + (j * delta));
+                        metricsMesure.newSecondValues.Add(val_i + (j * delta));
                     }
+                }
+                // if totalTimeSeconds > (generated) total recorded * 10sec
+                if (metricsMesure.newSecondValues.Count < this.TotalTimeSeconds)
+                {
+                    metricsMesure.newSecondValues.Add(val_i);
                 }
             }
 
 
             private NikeJson.Activity jsonActivity;
 
-            private int totalTimeSecondsField;
             public int TotalTimeSeconds
             {
                 get
                 {
-                    string[] durationTab = jsonActivity.metricSummary.duration.Split(':');
-                    TimeSpan timeDuration = new TimeSpan(Int32.Parse(durationTab[0]), Int32.Parse(durationTab[1]), Int32.Parse(durationTab[2].Split('.')[0]));
-                    this.totalTimeSecondsField = (int)timeDuration.TotalSeconds;
-
-                    return this.totalTimeSecondsField;
-                }
-                set
-                {
-                    this.totalTimeSecondsField = value;
+                    //string[] durationTab = jsonActivity.metricSummary.duration.Split(':');
+                    return jsonActivity.metricSummary.TotalTimeSeconds;
                 }
             }
 
