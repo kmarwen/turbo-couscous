@@ -45,7 +45,7 @@
             this.txb_Token.Name = "txb_Token";
             this.txb_Token.Size = new System.Drawing.Size(211, 20);
             this.txb_Token.TabIndex = 0;
-            this.txb_Token.Text = "VGfqxAGiD5zYhUXdLOGRnKFaklVw";
+            this.txb_Token.Text = "nUAKkVK6Z19ELBwAQpDdgQhiWWEe";
             // 
             // lbl_token
             // 
