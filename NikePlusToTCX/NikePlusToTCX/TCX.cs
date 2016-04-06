@@ -70,8 +70,6 @@ namespace NikePlusToTCX
                 ExpandDataToSeconds(metricsDistance);
                 ExpandDataToSeconds(metricsSpeed);
 
-                
-                // old
 
                 if (nikeActivity.isGpsActivity)
                 {
