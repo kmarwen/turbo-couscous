@@ -66,10 +66,11 @@ namespace NikePlusToTCX
                 metricsDistance.values = metricsDistance.values.Select(x => x.Replace('.', ',')).ToList();
                 metricsSpeed.values = metricsSpeed.values.Select(x => x.Replace('.', ',')).ToList();
 
-                // étalement sur secondes
+                // étalement sur secondes // adding new lists inside metrics with extended times and distances
                 ExpandDataToSeconds(metricsDistance);
                 ExpandDataToSeconds(metricsSpeed);
 
+                var endTime = nikeActivity.startTime.AddSeconds(TotalTimeSeconds);
 
                 if (nikeActivity.isGpsActivity)
                 {
@@ -77,12 +78,14 @@ namespace NikePlusToTCX
 
                     for (int i = 0; i < nikeActivity.activityGps.waypoints.Count; i++)
                     {
+                        // index to use
                         var secondsIndex = ratio * i;
 
+                        // corresponding rounded index in list
                         int secondsIndexRounded = (int)Math.Round(secondsIndex, MidpointRounding.AwayFromZero);
 
                         TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpoint trackpoint = new TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpoint();
-                        
+
                         trackpoint.AltitudeMeters = nikeActivity.activityGps.waypoints[i].elevation;
                         trackpoint.AltitudeMetersSpecified = true;
                         trackpoint.Position = new TrainingCenterDatabaseActivitiesActivityLapTrackpointPosition()
@@ -90,25 +93,44 @@ namespace NikePlusToTCX
                             LatitudeDegrees = nikeActivity.activityGps.waypoints[i].latitude,
                             LongitudeDegrees = nikeActivity.activityGps.waypoints[i].longitude,
                         };
-
-                        trackpoint.Time = nikeActivity.startTime.AddSeconds(secondsIndexRounded);
-                        trackpoint.DistanceMeters = metricsDistance.newSecondValues[secondsIndexRounded] * 1000;
-
-                        //RunCadence = 100,
-                        var speed = metricsSpeed.newSecondValues[secondsIndexRounded];
-                        if (speed>0)
+                        var timeStamp = nikeActivity.startTime.AddSeconds(secondsIndexRounded);
+                        if (timeStamp < endTime)
                         {
-                            trackpoint.Extensions = new TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpointExtensions();
-                            trackpoint.Extensions.TPX = new TCX.TPX();
-                            trackpoint.Extensions.TPX.Speed = metricsSpeed.newSecondValues[secondsIndexRounded];
+                            trackpoint.Time = timeStamp;
+                            trackpoint.DistanceMeters = metricsDistance.newSecondValues[secondsIndexRounded] * 1000;
+
+                            //RunCadence = 100,
+                            var speed = metricsSpeed.newSecondValues[secondsIndexRounded];
+                            if (speed > 0)
+                            {
+                                trackpoint.Extensions = new TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpointExtensions();
+                                trackpoint.Extensions.TPX = new TCX.TPX();
+                                trackpoint.Extensions.TPX.Speed = metricsSpeed.newSecondValues[secondsIndexRounded];
+                            }
+                            // add the trackpoint
+                            trackPointsList.Add(trackpoint);
                         }
-                        // add the trackpoint
-                        trackPointsList.Add(trackpoint);
+                        else
+                        {
+                            trackpoint.Time = endTime;
+                            trackpoint.DistanceMeters = metricsDistance.newSecondValues[metricsDistance.newSecondValues.Count-1] * 1000;
+
+                            //RunCadence = 100,
+                            var speed = metricsSpeed.newSecondValues[metricsSpeed.newSecondValues.Count-1];
+                            if (speed > 0)
+                            {
+                                trackpoint.Extensions = new TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpointExtensions();
+                                trackpoint.Extensions.TPX = new TCX.TPX();
+                                trackpoint.Extensions.TPX.Speed = metricsSpeed.newSecondValues[metricsSpeed.newSecondValues.Count - 1];
+                            }
+                            // add the trackpoint
+                            trackPointsList.Add(trackpoint);
+                            break;
+                        }
                     }
                 }
                 else
                 {
-                    var endTime = nikeActivity.startTime.AddSeconds(TotalTimeSeconds);
                     for (int i = 0; i < metricsDistance.values.Count; i++)
                     //for (int i = 0; i < TotalTimeSeconds; i++)
                     {
@@ -127,12 +149,13 @@ namespace NikePlusToTCX
                                 trackpoint.Extensions.TPX = new TCX.TPX();
                                 trackpoint.Extensions.TPX.Speed = speed;
                             }
-
                             trackPointsList.Add(trackpoint);
                         }
-                        else
+                        else // time metrics > total time
                         {
-                            // TO DO revoir
+                            trackpoint.Time = endTime;
+                            trackpoint.DistanceMeters = 1000 *  double.Parse(metricsDistance.values[metricsDistance.values.Count - 1]);// // double.Parse(nikeActivity.metricSummary.distance.Replace('.', ','));
+                            trackPointsList.Add(trackpoint);
                             break;
                         }
                     }
