@@ -26,8 +26,17 @@ namespace NikePlusToTCX
             public string fuel { get; set; }
             [JsonProperty("distance")]
             public string distance { get; set; }
-            [JsonProperty("steps")]
+
+            [JsonIgnore]
             public string steps { get; set; }
+
+            [JsonProperty("steps")]
+            public int stepsInt
+            {
+                get { return int.Parse(steps); }
+                set { steps = value.ToString(); }
+            }
+            
 
             private string durationField;
             [JsonProperty("duration")]
@@ -39,11 +48,11 @@ namespace NikePlusToTCX
                     durationField = value;
                     string[] durationTab = this.durationField.Split(':');
                     TimeSpan timeDuration = new TimeSpan(Int32.Parse(durationTab[0]), Int32.Parse(durationTab[1]), Int32.Parse(durationTab[2].Split('.')[0]));
-                    TotalTimeSeconds = (int)timeDuration.TotalSeconds;
+                    TotalTimeSecondsInt = (int)timeDuration.TotalSeconds;
                 }
             }
 
-            public int TotalTimeSeconds
+            public int TotalTimeSecondsInt
             {
                 get;
                 set;

@@ -18,6 +18,7 @@ namespace NikePlusToTCX
     public partial class Form1 : Form
     {
         NikeJson.ActivitiesContainer activitiesContainer = null;
+        private string access_token = string.Empty;
         public Form1()
         {
             InitializeComponent();
@@ -42,7 +43,25 @@ namespace NikePlusToTCX
                 nikeplus_timeout_seconds = 30
                     }
                     */
+            dateTimePicker_startDate.Value = dateTimePicker_startDate.Value.AddDays(-10);
 
+        }
+
+                
+        
+        private string getRequestURL()
+        {
+            access_token = txb_Token.Text; 
+            string count = tb_count.Text;
+            string startDate = dateTimePicker_startDate.Value.ToString("yyyy-MM-dd");
+            string endDate = dateTimePicker_endDate.Value.ToString("yyyy-MM-dd");
+            string requestUrl = tb_url.Text
+                    .Replace("{access_token}", access_token)
+                    .Replace("{startDate}", startDate)
+                    .Replace("{endDate}", endDate)
+                    .Replace("{count}", count)
+                    ;
+            return requestUrl;
         }
 
         Dictionary<string, NikeJson.Activity> dicActivities;
@@ -50,9 +69,8 @@ namespace NikePlusToTCX
         private void btn_GetAllActivities_Click(object sender, EventArgs e)
         {
             listBox1.Items.Clear();
-            string access_token = txb_Token.Text;
-            string requestUrl = txb_url.Text.Replace("{access_token}", access_token);
-
+            string requestUrl = getRequestURL();
+            
             try
             {
                 HttpWebRequest request = WebRequest.Create(requestUrl) as HttpWebRequest;
