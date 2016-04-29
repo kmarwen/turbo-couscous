@@ -160,5 +160,10 @@ namespace NikePlusToTCX
 
             }
         }
+
+        private void dateTimePicker_startDate_ValueChanged(object sender, EventArgs e)
+        {
+            dateTimePicker_endDate.Value = dateTimePicker_startDate.Value;
+        }
     }
 }

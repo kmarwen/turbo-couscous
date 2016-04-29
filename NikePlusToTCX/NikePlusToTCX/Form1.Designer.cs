@@ -52,7 +52,7 @@
             this.txb_Token.Name = "txb_Token";
             this.txb_Token.Size = new System.Drawing.Size(327, 20);
             this.txb_Token.TabIndex = 0;
-            this.txb_Token.Text = "J11NL3BCJdjzIs7kRW5mi7xu78XN";
+            this.txb_Token.Text = "78BsE48q1tzAAQYGv38chTUO9VBf";
             // 
             // lbl_token
             // 
@@ -132,6 +132,7 @@
             this.dateTimePicker_startDate.Name = "dateTimePicker_startDate";
             this.dateTimePicker_startDate.Size = new System.Drawing.Size(200, 20);
             this.dateTimePicker_startDate.TabIndex = 11;
+            this.dateTimePicker_startDate.ValueChanged += new System.EventHandler(this.dateTimePicker_startDate_ValueChanged);
             // 
             // dateTimePicker_endDate
             // 
