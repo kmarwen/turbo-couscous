@@ -52,7 +52,7 @@
             this.txb_Token.Name = "txb_Token";
             this.txb_Token.Size = new System.Drawing.Size(327, 20);
             this.txb_Token.TabIndex = 0;
-            this.txb_Token.Text = "78BsE48q1tzAAQYGv38chTUO9VBf";
+            this.txb_Token.Text = "zeiJL0GgI9HB0r3ScAVShojUEQCU";
             // 
             // lbl_token
             // 
@@ -105,6 +105,7 @@
             this.listBox1.FormattingEnabled = true;
             this.listBox1.Location = new System.Drawing.Point(15, 291);
             this.listBox1.Name = "listBox1";
+            this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBox1.Size = new System.Drawing.Size(934, 238);
             this.listBox1.TabIndex = 8;
             // 

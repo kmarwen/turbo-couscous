@@ -165,7 +165,10 @@ namespace NikePlusToTCX
             public string metricType { get; set; }
             [JsonProperty("values")]
             public IList<string> values { get; set; }
+            // etale metrics from 10 sec to 1 sec
             public IList<double> newSecondValues { get; set; }
+            // recalculates speed from distance
+            public IList<double> newSpeedValues { get; set; }
         }
 
 

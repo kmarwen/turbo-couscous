@@ -109,55 +109,58 @@ namespace NikePlusToTCX
 
         private void btn_Convert_Click(object sender, EventArgs e)
         {
-            string activityName = listBox1.SelectedItem as string;
-
-            NikeJson.Activity jsonActivity = dicActivities[activityName];
-            if (jsonActivity != null)
+            foreach (var selectedActivity in listBox1.SelectedItems)
             {
-                // Only One lap for now, Nike+ doesn't store laps
-                List<TCX.TrainingCenterDatabaseActivitiesActivityLap> Laps = new List<TCX.TrainingCenterDatabaseActivitiesActivityLap>();
-                TCX.TrainingCenterDatabaseActivitiesActivityLap lap = new TCX.TrainingCenterDatabaseActivitiesActivityLap(jsonActivity);
-                
-                Laps.Add(lap);
+                var activityName = selectedActivity as string;
 
-                TCX.TrainingCenterDatabaseActivitiesActivity activity = new TCX.TrainingCenterDatabaseActivitiesActivity();
-                activity.Sport = "Running";
-                activity.Id = jsonActivity.startTime.ToUniversalTime();
-                activity.Laps = Laps;
-
-
-                // Only One lap for now, Nike+ doesn't store laps
-                TCX.TrainingCenterDatabaseActivities activities = new TCX.TrainingCenterDatabaseActivities()
+                NikeJson.Activity jsonActivity = dicActivities[activityName];
+                if (jsonActivity != null)
                 {
-                    Activity = activity
-                };
-                TCX.TrainingCenterDatabase tcx = new TCX.TrainingCenterDatabase()
-                {
-                    Activities = activities
-                };
+                    // Only One lap for now, Nike+ doesn't store laps
+                    List<TCX.TrainingCenterDatabaseActivitiesActivityLap> Laps = new List<TCX.TrainingCenterDatabaseActivitiesActivityLap>();
+                    TCX.TrainingCenterDatabaseActivitiesActivityLap lap = new TCX.TrainingCenterDatabaseActivitiesActivityLap(jsonActivity);
+
+                    Laps.Add(lap);
+
+                    TCX.TrainingCenterDatabaseActivitiesActivity activity = new TCX.TrainingCenterDatabaseActivitiesActivity();
+                    activity.Sport = "Running";
+                    activity.Id = jsonActivity.startTime.ToUniversalTime();
+                    activity.Laps = Laps;
 
 
-
-                // generation TCX File
-                string filePath = @"C:\Users\KAROUI\Desktop\Nike\" + activityName + ".tcx";
-                System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(tcx.GetType());
-
-                using (StreamWriter streamWriter = new StreamWriter(filePath))
-                {
-                    serializer.Serialize(streamWriter, tcx);
-                    StringBuilder sb = new StringBuilder();
-                    using (StringWriter sw = new StringWriter(sb))
+                    // Only One lap for now, Nike+ doesn't store laps
+                    TCX.TrainingCenterDatabaseActivities activities = new TCX.TrainingCenterDatabaseActivities()
                     {
-                        sw.Write(streamWriter);
-                        richTextBox1.Text += filePath + " OK\n";
-                    }
-                }
-                /*
-                            New Mizuno Inspire 11 ^_^ 
-                            Course Importé de nike+ avec mon outil perso génial ^_^
-                */
-                //    System.IO.File.WriteAllText(filePath, textWriter.ToString(), Encoding.UTF8);
+                        Activity = activity
+                    };
+                    TCX.TrainingCenterDatabase tcx = new TCX.TrainingCenterDatabase()
+                    {
+                        Activities = activities
+                    };
 
+
+
+                    // generation TCX File
+                    string filePath = @"C:\Users\KAROUI\Desktop\Nike\NikePlus-MKExporter\" + activityName + ".tcx";
+                    System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(tcx.GetType());
+
+                    using (StreamWriter streamWriter = new StreamWriter(filePath))
+                    {
+                        serializer.Serialize(streamWriter, tcx);
+                        StringBuilder sb = new StringBuilder();
+                        using (StringWriter sw = new StringWriter(sb))
+                        {
+                            sw.Write(streamWriter);
+                            richTextBox1.Text += filePath + " OK\n";
+                        }
+                    }
+                    /*
+                                New Mizuno Inspire 11 ^_^ 
+                                Course Importé de nike+ avec mon outil perso génial ^_^
+                    */
+                    //    System.IO.File.WriteAllText(filePath, textWriter.ToString(), Encoding.UTF8);
+
+                }
             }
         }
 
