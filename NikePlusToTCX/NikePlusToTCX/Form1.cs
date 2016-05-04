@@ -43,7 +43,7 @@ namespace NikePlusToTCX
                 nikeplus_timeout_seconds = 30
                     }
                     */
-            dateTimePicker_startDate.Value = dateTimePicker_startDate.Value.AddDays(-10);
+            //dateTimePicker_startDate.Value = dateTimePicker_startDate.Value.AddDays(-10);
 
         }
 

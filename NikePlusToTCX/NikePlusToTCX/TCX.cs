@@ -35,6 +35,7 @@ namespace NikePlusToTCX
             [XmlElement("Id")]
             public string FormattedId
             {
+                //get { return this.Id.ToString("yyyy-MM-ddTHH:mm:ssK"); }
                 get { return this.Id.ToString("yyyy-MM-ddTHH:mm:ss.fffK"); }
                 set { this.Id = DateTime.Parse(value); }
             }
@@ -60,11 +61,13 @@ namespace NikePlusToTCX
 
                 List<TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpoint> trackPointsList = new List<TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpoint>();
                 
+
+                // TODO : use try catch in case of no metrics speed
                 NikeJson.Metric metricsDistance = nikeActivity.metrics.Where(m => (m.metricType == "DISTANCE")).First();
-                NikeJson.Metric metricsSpeed = nikeActivity.metrics.Where(m => (m.metricType == "SPEED")).First();
+                //NikeJson.Metric metricsSpeed = nikeActivity.metrics.Where(m => (m.metricType == "SPEED")).First();
                 // replace . with , otherwise convertion could not be possible
                 metricsDistance.values = metricsDistance.values.Select(x => x.Replace('.', ',')).ToList();
-                metricsSpeed.values = metricsSpeed.values.Select(x => x.Replace('.', ',')).ToList();
+                //metricsSpeed.values = metricsSpeed.values.Select(x => x.Replace('.', ',')).ToList();
 
 
                 List<double> newSpeeds = new List<double>();
@@ -83,17 +86,18 @@ namespace NikePlusToTCX
                     newSpeeds.Add(speed);
                 }
 
-                metricsSpeed.newSpeedValues = newSpeeds;
-
-
-                // étalement sur secondes // adding new lists inside metrics with extended times and distances
-                ExpandDataToSeconds(metricsDistance);
-                ExpandDataToSeconds(metricsSpeed);
-
-                var endTime = nikeActivity.startTime.AddSeconds(nikeActivity.metricSummary.TotalTimeSecondsInt);
+                metricsDistance.newSpeedValues = newSpeeds;
+                MaximumSpeed = metricsDistance.newSpeedValues.Max();
+                // obligatoire
+                TotalTimeSeconds = nikeActivity.metricSummary.TotalTimeSecondsInt;
+                var endTime = nikeActivity.startTime.AddSeconds(TotalTimeSeconds);
 
                 if (nikeActivity.isGpsActivity)
                 {
+                    // étalement sur secondes // adding new lists inside metrics with extended times and distances
+                    ExpandDataToSeconds(metricsDistance);
+                    //ExpandDataToSeconds(metricsSpeed);
+
                     double ratio = (double)metricsDistance.newSecondValues.Count / (double)nikeActivity.activityGps.waypoints.Count;
 
                     for (int i = 0; i < nikeActivity.activityGps.waypoints.Count; i++)
@@ -101,7 +105,7 @@ namespace NikePlusToTCX
                         // index to use
                         var secondsIndex = ratio * i;
 
-                        // corresponding rounded index in list
+                        // Corresponding rounded index in list
                         int secondsIndexRounded = (int)Math.Round(secondsIndex, MidpointRounding.AwayFromZero);
 
                         TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpoint trackpoint = new TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpoint();
@@ -115,11 +119,9 @@ namespace NikePlusToTCX
                         };
                         var timeStamp = nikeActivity.startTime.AddSeconds(secondsIndexRounded);
 
-                        //test
                         trackpoint.Time = timeStamp;
                         trackpoint.DistanceMeters = metricsDistance.newSecondValues[secondsIndexRounded] * 1000;
                         trackPointsList.Add(trackpoint);
-                        //fin test
 
                         /*
                          * 
@@ -180,13 +182,15 @@ namespace NikePlusToTCX
                             trackpoint.Time = timeStamp;
                             trackpoint.DistanceMeters = double.Parse(metricsDistance.values[i]) * 1000;
 
-                            var speed = double.Parse(metricsSpeed.values[i]);
-                            if (speed > 0)
-                            {
-                                trackpoint.Extensions = new TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpointExtensions();
-                                trackpoint.Extensions.TPX = new TCX.TPX();
-                                trackpoint.Extensions.TPX.Speed = speed;
-                            }
+                            ////var speed = double.Parse(metricsSpeed.values[i]);
+                            //var speed = metricsSpeed.newSpeedValues[i];
+                            //if (speed > 0)
+                            //{
+                            //    trackpoint.Extensions = new TCX.TrainingCenterDatabaseActivitiesActivityLapTrackpointExtensions();
+                            //    trackpoint.Extensions.TPX = new TCX.TPX();
+                            //    trackpoint.Extensions.TPX.Speed = speed;
+                            //}
+
                             
                             trackPointsList.Add(trackpoint);
 
@@ -209,12 +213,10 @@ namespace NikePlusToTCX
                     Trackpoints = trackPointsList,
                 };
 
-                TotalTimeSeconds = nikeActivity.metricSummary.TotalTimeSecondsInt;
 
                 //AverageHeartRateBpm = new TCX.TrainingCenterDatabaseActivitiesActivityLapAverageHeartRateBpm() { Value = 160 };
                 //MaximumHeartRateBpm = new TCX.TrainingCenterDatabaseActivitiesActivityLapMaximumHeartRateBpm() { Value = 188 };
 
-                MaximumSpeed = metricsSpeed.newSpeedValues.Max();
                 decimal decimalTimeTotal = Convert.ToDecimal(TotalTimeSeconds);
                 decimal totalTimeMinutes = decimal.Round(decimal.Divide(decimalTimeTotal, 60), MidpointRounding.AwayFromZero);
 
@@ -223,7 +225,7 @@ namespace NikePlusToTCX
                  * Nike Cadence = total steps per minute
                  * Garmin Cadence = (totalsteps / 2 ) per minute (I think for biking)
                  * Here I use nike Cadence (total steps / total minutes)
-                 * 
+                 * finally I divide cadence / 2
                  * 
                 Cadence = Convert.ToInt32(
                     decimal.Round(
@@ -235,9 +237,11 @@ namespace NikePlusToTCX
                                 );
                 */
 
-                Cadence = nikeActivity.metricSummary.stepsInt / Convert.ToInt32(totalTimeMinutes);
+                TotalSteps = nikeActivity.metricSummary.stepsInt; 
+                Cadence = (TotalSteps / Convert.ToInt32(totalTimeMinutes)) / 2;
 
                 Calories = int.Parse(nikeActivity.metricSummary.calories);
+                
                 // the last trackpoint contains le total distance ;)
                 DistanceMeters = double.Parse(nikeActivity.metricSummary.distance.Replace('.', ',')) * 1000; //trackPointsList.Max(x => x.DistanceMeters);
                 //Intensity = "active",
@@ -290,6 +294,7 @@ namespace NikePlusToTCX
 
             public double MaximumSpeed { get; set; }
 
+            public int TotalSteps { get; set; }
             public int Calories { get; set; }
             public int TotalTimeSeconds { get; set; }
 

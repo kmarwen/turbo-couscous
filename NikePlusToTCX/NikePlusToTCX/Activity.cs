@@ -105,7 +105,7 @@ namespace NikePlusToTCX
                 {
                     string activityJsonData = r.ReadToEnd();
                     Activity activity = JsonConvert.DeserializeObject<Activity>(activityJsonData);
-                    activity.jsonData = activityJsonData;
+                    jsonData = activityJsonData;
                     metrics = activity.metrics;
                     // todo : check again
                     isGpsActivity = activity.isGpsActivity;
